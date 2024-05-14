@@ -29,9 +29,9 @@
 #define FLAG_INCLUSIVE      2       //Flag value indicating inclusive sum of a partition tile is ready
 #define FLAG_MASK           3       //Mask used to retrieve flag values
 
-layout(local_size_x = 256) in;
+layout(local_size_x = 128) in;
 layout(set = 2, binding = 1) buffer BGlobalHist{
-    uint b_globalHist[1024];
+    uint b_globalHist[4096];
 };
 
 layout(set = 2, binding = 4) buffer BPassHist {
@@ -65,21 +65,18 @@ void global_hist_exclusive_scan(uint threadidx, uint workgroupidx){
     // b_passHist[index + workgroupidx * RADIX_BIN * e_workgroups] = 20;
 }
 void k_scan(uint block_id, uint logical_blocks){
-    const uint t = b_globalHist[gl_LocalInvocationID.x + block_id * RADIX_BIN];
+    uint t = b_globalHist[gl_LocalInvocationID.x + block_id * RADIX_BIN];
     s_scan[gl_LocalInvocationID.x] = t + subgroupExclusiveAdd(t);
 
     if (LANE_COUNT >= 16){
-        global_hist_exclusive_scan(gl_LocalInvocationID.x, block_id);
+  //      global_hist_exclusive_scan(gl_LocalInvocationID.x, block_id);
     }
-    
-    if (LANE_COUNT < 16){
 
-    }
 }
 
 void main(){
     uint logical_blocks = 256;
-    for (uint zheyuan_block_id = gl_WorkGroupID.x; zheyuan_block_id < logical_blocks; zheyuan_block_id += gl_NumWorkGroups.x){
-        k_scan(zheyuan_block_id, logical_blocks);
-    }
+    //for (uint zheyuan_block_id = gl_WorkGroupID.x; zheyuan_block_id < logical_blocks; zheyuan_block_id += gl_NumWorkGroups.x){
+        k_scan(gl_WorkGroupID.x, 256);
+    //}
 }

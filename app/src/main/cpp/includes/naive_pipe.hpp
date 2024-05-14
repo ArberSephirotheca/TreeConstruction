@@ -146,9 +146,35 @@ class Pipe : public ApplicationBase {
 void Pipe::allocate() {
     void *mapped;
     // --- Essentials ---
-    //u_points.resize(n);
-    //u_morton_keys.resize(n);
-    //u_unique_morton_keys.resize(n);
+
+    constexpr auto radix = 256;
+    constexpr auto passes = 4;
+    const auto max_binning_thread_blocks = ((2<<25) + 3980 -1)/ 3980;
+
+    // sort_tmp
+    create_shared_empty_storage_buffer(params_.n * sizeof(uint32_t), &sort_tmp.u_sort_alt_buffer, &sort_tmp.u_sort_alt_memory, &mapped);
+    sort_tmp.u_sort_alt = static_cast<uint32_t*>(mapped);
+    std::fill_n(sort_tmp.u_sort_alt, params_.n, 0);
+
+    create_shared_empty_storage_buffer(radix * passes * 4*sizeof(uint32_t), &sort_tmp.u_global_histogram_buffer, &sort_tmp.u_global_histogram_memory, &mapped);
+    sort_tmp.u_global_histogram = static_cast<uint32_t*>(mapped);
+    std::fill_n(sort_tmp.u_global_histogram, radix * passes*4, 0);
+
+    create_shared_empty_storage_buffer(4 * sizeof(uint32_t), &sort_tmp.u_index_buffer, &sort_tmp.u_index_memory, &mapped);
+    sort_tmp.u_index = static_cast<uint32_t*>(mapped);
+    std::fill_n(sort_tmp.u_index, 4, 0);
+
+    create_shared_empty_storage_buffer(radix * max_binning_thread_blocks * sizeof(glm::uvec4), &sort_tmp.u_pass_histogram_buffer, &sort_tmp.u_pass_histogram_memory, &mapped);
+    sort_tmp.u_pass_histogram = static_cast<glm::uvec4*>(mapped);
+    std::fill_n(sort_tmp.u_pass_histogram, radix * max_binning_thread_blocks, glm::uvec4(0, 0, 0, 0));
+
+    create_shared_empty_storage_buffer(radix * passes* max_binning_thread_blocks * sizeof(uint32_t), &sort_tmp.u_pass_histogram_64_buffer, &sort_tmp.u_pass_histogram_64_memory, &mapped);
+    sort_tmp.u_pass_histogram_64 = static_cast<uint32_t*>(mapped);
+    std::fill_n(sort_tmp.u_pass_histogram_64, radix  * passes * max_binning_thread_blocks, 0);
+
+    uint32_t aligned_size = ((params_.n + 4 - 1)/ 4) * 4;
+    const uint32_t num_blocks = (aligned_size + PARTITION_SIZE - 1) / PARTITION_SIZE;
+
     // map and initialize to zero
     create_shared_empty_storage_buffer(params_.n * sizeof( glm::vec4), &u_points_buffer, &u_points_memory, &mapped);
     u_points = static_cast< glm::vec4*>(mapped);
@@ -198,33 +224,6 @@ void Pipe::allocate() {
     std::fill_n(oct.u_nodes, params_.n, OctNode());
 
 
-    constexpr auto radix = 256;
-    constexpr auto passes = 4;
-    const auto max_binning_thread_blocks = ((2<<25) + 7680 -1)/ 7680;
-
-    // sort_tmp
-    create_shared_empty_storage_buffer(params_.n * sizeof(uint32_t), &sort_tmp.u_sort_alt_buffer, &sort_tmp.u_sort_alt_memory, &mapped);
-    sort_tmp.u_sort_alt = static_cast<uint32_t*>(mapped);
-    std::fill_n(sort_tmp.u_sort_alt, params_.n, 0);
-
-    create_shared_empty_storage_buffer(radix * passes * sizeof(uint32_t), &sort_tmp.u_global_histogram_buffer, &sort_tmp.u_global_histogram_memory, &mapped);
-    sort_tmp.u_global_histogram = static_cast<uint32_t*>(mapped);
-    std::fill_n(sort_tmp.u_global_histogram, radix * passes, 0);
-
-    create_shared_empty_storage_buffer(4 * sizeof(uint32_t), &sort_tmp.u_index_buffer, &sort_tmp.u_index_memory, &mapped);
-    sort_tmp.u_index = static_cast<uint32_t*>(mapped);
-    std::fill_n(sort_tmp.u_index, 4, 0);
-
-    create_shared_empty_storage_buffer(radix * max_binning_thread_blocks * sizeof(glm::uvec4), &sort_tmp.u_pass_histogram_buffer, &sort_tmp.u_pass_histogram_memory, &mapped);
-    sort_tmp.u_pass_histogram = static_cast<glm::uvec4*>(mapped);
-    std::fill_n(sort_tmp.u_pass_histogram, radix * max_binning_thread_blocks, glm::uvec4(0, 0, 0, 0));
-
-    create_shared_empty_storage_buffer(radix * passes* max_binning_thread_blocks * sizeof(uint32_t), &sort_tmp.u_pass_histogram_64_buffer, &sort_tmp.u_pass_histogram_64_memory, &mapped);
-    sort_tmp.u_pass_histogram_64 = static_cast<uint32_t*>(mapped);
-    std::fill_n(sort_tmp.u_pass_histogram_64, radix  * passes * max_binning_thread_blocks, 0);
-
-   uint32_t aligned_size = ((params_.n + 4 - 1)/ 4) * 4;
-   const uint32_t num_blocks = (aligned_size + PARTITION_SIZE - 1) / PARTITION_SIZE;
     // unique_tmp
     create_shared_empty_storage_buffer(params_.n * sizeof(uint32_t), &unique_tmp.contributions_buffer, &unique_tmp.contributions_memory, &mapped);
     unique_tmp.contributions = static_cast<uint32_t*>(mapped);
@@ -374,10 +373,10 @@ void Pipe::morton(const int num_blocks, const int queue_idx){
 
 
 void Pipe::radix_sort_alt(const int num_blocks, const int queue_idx){
-  std::cout << "start radix sort alt"<<std::endl;
-    for (int i = 0; i < 1024; i++){
-    printf("unsorted_key[%d]: %d\n", i, u_morton_keys[i]);
-  }
+//  std::cout << "start radix sort alt"<<std::endl;
+//    for (int i = 0; i < 1024; i++){
+//    printf("unsorted_key[%d]: %d\n", i, u_morton_keys[i]);
+//  }
   auto radixsort_stage = RadixSort64(assetManager_);
   radixsort_stage.run(num_blocks,
   queue_idx,
