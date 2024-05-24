@@ -6,8 +6,7 @@
 #extension GL_KHR_shader_subgroup_shuffle_relative : enable
 #extension GL_KHR_shader_subgroup_shuffle : enable
 
-//#define input_size 2000000
-#define SCAN_BLOCK_SIZE 256
+#define SCAN_BLOCK_SIZE 128
 
 #define RADIX_BIN 256
 #define RADIX_LOG 8
@@ -30,7 +29,7 @@
 #define FLAG_INCLUSIVE      2       //Flag value indicating inclusive sum of a partition tile is ready
 #define FLAG_MASK           3       //Mask used to retrieve flag values
 
-layout(local_size_x = 256) in;
+layout(local_size_x = 128) in;
 layout(set = 2, binding = 1) buffer BGlobalHist{
     uint b_globalHist[1024];
 };
@@ -74,7 +73,7 @@ void exclusive_scan_full(uint threadidx, uint workgroupidx, uint circular_shift,
     }
 }
 
-void exclusive_scan_partial(uint threadidx, uint workgroupidx, uint circular_shift, uint part_end, uint device_offset, uint reduction){
+void exclusive_scan_partial(uint threadidx, uint workgroupidx, uint circular_shift, uint part_end, uint device_offset, inout uint reduction){
     uint i = threadidx + part_end;
     if (i < e_workgroups){
         s_scan[threadidx] = b_passHist[i + device_offset];

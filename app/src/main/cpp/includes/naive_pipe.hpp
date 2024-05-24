@@ -4,6 +4,7 @@
 #include "init.hpp"
 #include "morton.hpp"
 #include "radix_sort_64.hpp"
+#include "radix_sort_downsweep.hpp"
 #include "unique.hpp"
 #include "radix_tree.hpp"
 #include "edge_count.hpp"
@@ -200,7 +201,7 @@ void Pipe::allocate() {
 
     constexpr auto radix = 256;
     constexpr auto passes = 4;
-    const auto max_binning_thread_blocks = ((2<<25) + 7680 -1)/ 7680;
+    const auto max_binning_thread_blocks = ((2<<25) + 3840 -1)/ 3840;
 
     // sort_tmp
     create_shared_empty_storage_buffer(params_.n * sizeof(uint32_t), &sort_tmp.u_sort_alt_buffer, &sort_tmp.u_sort_alt_memory, &mapped);
@@ -364,11 +365,11 @@ void Pipe::morton(const int num_blocks, const int queue_idx){
       printf("morton_keys[%d]: %d\n", i, u_morton_keys[i]);
     }
     */
-    /*
-    for(int i = 0; i < params_.n; ++i){
-       u_morton_keys[i] = params_.n - i - 1;
-    }
-    */
+
+//    for(int i = 0; i < params_.n; ++i){
+//       u_morton_keys[i] = i;
+//    }
+
 
 }
 
@@ -378,7 +379,7 @@ void Pipe::radix_sort_alt(const int num_blocks, const int queue_idx){
     for (int i = 0; i < 1024; i++){
         printf("unsorted_key[%d]: %d\n", i, u_morton_keys[i]);
     }
-    auto radixsort_stage = RadixSort64(assetManager_);
+    auto radixsort_stage = RadixSortDownsweep(assetManager_);
     radixsort_stage.run(num_blocks,
                         queue_idx,
                         u_morton_keys,

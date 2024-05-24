@@ -6,7 +6,6 @@
 #extension GL_KHR_shader_subgroup_shuffle_relative : enable
 #extension GL_KHR_shader_subgroup_shuffle : enable
 
-//#define input_size 2000000
 #define PART_SIZE 3840
 
 #define RADIX_BIN 256
@@ -52,7 +51,7 @@ layout(push_constant) uniform Constant{
 
 
 
-layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 
 shared uint s_upsweep[RADIX_BIN * 2];
 
@@ -72,7 +71,7 @@ void global_hist_exclusive_scan(uint threadidx){
     barrier();
 
     if (threadidx < (RADIX_BIN / LANE_COUNT)){
-        s_upsweep[(threadidx + 1) * LANE_COUNT - 1] += subgroupExclusiveAdd(s_upsweep[threadidx + 1] * LANE_COUNT - 1);
+        s_upsweep[(threadidx + 1) * LANE_COUNT - 1] += subgroupExclusiveAdd(s_upsweep[(threadidx + 1) * LANE_COUNT - 1]);
     }
     groupMemoryBarrier();
     barrier();
@@ -95,13 +94,14 @@ void k_upsweep(uint block_id){
     groupMemoryBarrier();
     barrier();
 
-    // warp level histogram
+   // warp level histogram
     {
         const uint segmentIndex = gl_LocalInvocationID.x / 64 * RADIX_BIN;
         const uint partition_end = (block_id == e_workgroups -1) ? n : (block_id + 1) * PART_SIZE;
         uint t;
+
             for (uint i = gl_LocalInvocationID.x + block_id * PART_SIZE; i < partition_end; i += gl_WorkGroupSize.x){
-                atomicAdd(s_upsweep[segmentIndex + b_sort[i]], 1);
+                atomicAdd(s_upsweep[segmentIndex + (b_sort[i] >> radix_shift & RADIX_MASK)], 1);
             }
 
     }
@@ -117,6 +117,7 @@ void k_upsweep(uint block_id){
     }
 
     global_hist_exclusive_scan(gl_LocalInvocationID.x);
+
 }
 void main() {
     k_upsweep(gl_WorkGroupID.x);

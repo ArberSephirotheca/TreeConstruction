@@ -6,7 +6,6 @@
 #extension GL_KHR_shader_subgroup_shuffle_relative : enable
 #extension GL_KHR_shader_subgroup_shuffle : enable
 
-//#define input_size 2000000
 
 #define RADIX_BIN 256
 #define RADIX_LOG 8
@@ -64,12 +63,18 @@ void global_hist_exclusive_scan(uint threadidx, uint workgroupidx){
         (threadidx >= LANE_COUNT ? subgroupBroadcast(s_scan[threadidx - 1], 0) : 0)) << 2 | FLAG_INCLUSIVE;
     // b_passHist[index + workgroupidx * RADIX_BIN * e_workgroups] = 20;
 }
+
 void k_scan(uint block_id, uint logical_blocks){
-    const uint t = b_globalHist[gl_LocalInvocationID.x + block_id * RADIX_BIN];
+    uint t = 0;
+   // if ((gl_LocalInvocationID.x + block_id * RADIX_BIN) >= 1024){
+   //     t = b_globalHist[1023];
+   // }else{
+        t = b_globalHist[gl_LocalInvocationID.x + block_id * RADIX_BIN];
+   // }
     s_scan[gl_LocalInvocationID.x] = t + subgroupExclusiveAdd(t);
 
     if (LANE_COUNT >= 16){
-        global_hist_exclusive_scan(gl_LocalInvocationID.x, block_id);
+       // global_hist_exclusive_scan(gl_LocalInvocationID.x, block_id);
     }
 
     if (LANE_COUNT < 16){
@@ -79,7 +84,7 @@ void k_scan(uint block_id, uint logical_blocks){
 
 void main(){
     uint logical_blocks = 256;
-    for (uint zheyuan_block_id = gl_WorkGroupID.x; zheyuan_block_id < logical_blocks; zheyuan_block_id += gl_NumWorkGroups.x){
-        k_scan(zheyuan_block_id, logical_blocks);
-    }
+   // for (uint zheyuan_block_id = gl_WorkGroupID.x; zheyuan_block_id < logical_blocks; zheyuan_block_id += gl_NumWorkGroups.x){
+        k_scan(gl_WorkGroupID.x, logical_blocks);
+   // }
 }

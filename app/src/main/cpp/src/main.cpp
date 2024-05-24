@@ -8,7 +8,7 @@
 #include <string>
 #include <android/log.h>
 
-#define BUFFER_ELEMENTS  500000
+#define BUFFER_ELEMENTS  600000
 static jobject gAssetManagerGlobalRef = nullptr;
 static AAssetManager* gAAssetManager = nullptr;
 
@@ -71,21 +71,20 @@ Java_com_example_treeconstruction_MainActivity_androidMain(
     __android_log_print(ANDROID_LOG_DEBUG, "Pipeline", "Memory Allocated");
 
     pipe.init(n_blocks, 0);
-//    std::cout <<"morton"<<std::endl;
     pipe.morton(n_blocks, 0);
-
-    //pipe.radix_sort(n_blocks, 0);
+//
+//    //pipe.radix_sort(n_blocks, 0);
      pipe.radix_sort_alt(n_blocks, 0);
-
-     pipe.unique(n_blocks, 0);
-
-     pipe.radix_tree(n_blocks, 0);
-
-     pipe.edge_count(n_blocks, 0);
-
-     pipe.prefix_sum(n_blocks, 0);
-
-     pipe.octree(n_blocks, 0);
+//
+//     pipe.unique(n_blocks, 0);
+//
+//     pipe.radix_tree(n_blocks, 0);
+//
+//     pipe.edge_count(n_blocks, 0);
+//
+//     pipe.prefix_sum(n_blocks, 0);
+//
+//     pipe.octree(n_blocks, 0);
     return EXIT_SUCCESS;
 }
 
