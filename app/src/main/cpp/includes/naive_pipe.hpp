@@ -358,17 +358,18 @@ void Pipe::init(const int num_blocks, const int queue_idx){
 
 void Pipe::morton(const int num_blocks, const int queue_idx){
     std::cout << "start morton"<<std::endl;
-    Morton morton_stage = Morton(assetManager_);
-    morton_stage.run(num_blocks, queue_idx, u_points, u_morton_keys, u_points_buffer, u_morton_keys_buffer,  params_.n, params_.min_coord, params_.getRange());
+//    Morton morton_stage = Morton(assetManager_);
+//    morton_stage.run(num_blocks, queue_idx, u_points, u_morton_keys, u_points_buffer, u_morton_keys_buffer,  params_.n, params_.min_coord, params_.getRange());
+//
     /*
     for (int i = 0; i < 1024; i++){
       printf("morton_keys[%d]: %d\n", i, u_morton_keys[i]);
     }
     */
 
-//    for(int i = 0; i < params_.n; ++i){
-//       u_morton_keys[i] = i;
-//    }
+    for(int i = 0; i < params_.n; ++i){
+       u_morton_keys[i] = params_.n-i;
+    }
 
 
 }

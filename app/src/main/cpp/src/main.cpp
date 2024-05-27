@@ -8,7 +8,7 @@
 #include <string>
 #include <android/log.h>
 
-#define BUFFER_ELEMENTS  600000
+#define BUFFER_ELEMENTS  256
 static jobject gAssetManagerGlobalRef = nullptr;
 static AAssetManager* gAAssetManager = nullptr;
 

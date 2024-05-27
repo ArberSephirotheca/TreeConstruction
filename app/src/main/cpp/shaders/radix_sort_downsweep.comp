@@ -239,7 +239,7 @@ uint subgroup_hist_inclusive_scan_circle_shift_ge16(uint threadidx){
     uint reduction = s_subgroupHistograms[threadidx];
     for(uint i = threadidx + RADIX_BIN; i < subgroup_hist_size_ge16(); i += RADIX_BIN){
         reduction += s_subgroupHistograms[i];
-        s_subgroupHistograms[i] = reduction- s_subgroupHistograms[i];
+        s_subgroupHistograms[i] = reduction - s_subgroupHistograms[i];
     }
     return reduction;
 }
@@ -265,12 +265,6 @@ void subgroup_hist_exclusive_scan_ge16(uint threadidx, uint reduction){
 
 }
 
-void device_broadcast_reduction_ge16(uint threadidx, uint partition_index, uint reduction, const uint logical_blocks){
-    if (partition_index < logical_blocks - 1){
-        atomicAdd(b_passHist[threadidx + pass_hist_offset(partition_index + 1, logical_blocks)], FLAG_AGGREGATE | reduction << 2);
-        
-    }
-}
 
 
 void update_offset_ge16(uint threadidx, inout uint offsets[BIN_KEYS_PER_THREAD], uint keys[BIN_KEYS_PER_THREAD]){
@@ -297,24 +291,28 @@ void scatter_keys_shared(uint offsets[BIN_KEYS_PER_THREAD], uint keys[BIN_KEYS_P
 
 void scatter_device_ascending(uint threadidx){
     for (uint i = threadidx; i < BIN_PART_SIZE; i += BIN_THREADS){
-        write_key(s_subgroupHistograms[extract_digit(s_subgroupHistograms[i]) + BIN_PART_SIZE] + i, i);
+      write_key(s_subgroupHistograms[extract_digit(s_subgroupHistograms[i]) + BIN_PART_SIZE] + i, i);
+      //write_key(10, i);
     }
 }
-
+/*
 void scatter_device(uint threadidx){
     if (radix_shift == 24){
         for (uint i = threadidx; i < BIN_PART_SIZE; i += BIN_THREADS){
-            write_key(descending_index(s_subgroupHistograms[extract_digit(s_subgroupHistograms[i]) + BIN_PART_SIZE] + i), i);
+           write_key(descending_index(s_subgroupHistograms[extract_digit(s_subgroupHistograms[i]) + BIN_PART_SIZE] + i), i);
+           //write_key(10, i);
         }
     }else{
         scatter_device_ascending(threadidx);
     }
 }
+*/
 
 void scatter_device_partial_asceding(uint threadidx, uint final_part_size){
     for (uint i = threadidx; i < BIN_PART_SIZE; i += BIN_THREADS){
         if (i < final_part_size){
             write_key(s_subgroupHistograms[extract_digit(s_subgroupHistograms[i]) + BIN_PART_SIZE] + i, i);
+            // write_key(10, i);
         }
     }
 }
@@ -378,14 +376,14 @@ void k_DigitBinning(){
 
     if (partition_index < e_workgroups - 1){
         //scatter_device(gl_LocalInvocationID.x);
-     //   scatter_device_ascending(gl_LocalInvocationID.x);
+        scatter_device_ascending(gl_LocalInvocationID.x);
     }
-    /*
+
     if (partition_index == e_workgroups - 1){
         scatter_device_partial(gl_LocalInvocationID.x, partition_index);
 
     }
-    */
+
 }
 
 
