@@ -1,4 +1,4 @@
-#version 450
+`#version 450
 #extension GL_KHR_shader_subgroup_basic: enable
 #extension GL_KHR_shader_subgroup_ballot: enable
 #extension GL_KHR_shader_subgroup_arithmetic: enable
@@ -54,6 +54,7 @@ layout(set = 1, binding = 3) coherent buffer BIndex {
     uint b_index[4];
 };
 
+// todo: change it to uint
 layout(set = 1, binding = 4) buffer BPassHist {
     uint b_passHist[];
 };
@@ -294,7 +295,6 @@ void scatter_keys_shared(uint offsets[BIN_KEYS_PER_THREAD], uint keys[BIN_KEYS_P
     }
 }
 
-/*
 void lookback(uint threadidx, uint partition_index, uint exclusive_reduction, const uint logical_blocks){
     if (threadidx < RADIX_BIN){
         uint lookback_reduction = 0;
@@ -316,30 +316,6 @@ void lookback(uint threadidx, uint partition_index, uint exclusive_reduction, co
         }
     }
 }
-*/
-
-void lookback(uint threadidx, uint partition_index, uint exclusive_reduction, const uint logical_blocks){
-    if (threadidx < RADIX_BIN){
-        uint lookback_reduction = 0;
-        for (uint k = partition_index; k >= 0;){
-            const uint flag_payload = b_passHist[threadidx + pass_hist_offset(k, logical_blocks)];
-            if ((flag_payload & FLAG_MASK) == FLAG_INCLUSIVE){
-                lookback_reduction += flag_payload >> 2;
-                if (partition_index < logical_blocks - 1){
-                    atomicAdd(b_passHist[threadidx + pass_hist_offset(partition_index + 1, logical_blocks)], 1 | lookback_reduction << 2);
-                }
-                s_subgroupHistograms[threadidx + BIN_PART_SIZE] = lookback_reduction - exclusive_reduction;
-                break;
-            }
-
-            if ((flag_payload & FLAG_MASK) == FLAG_AGGREGATE){
-                lookback_reduction += flag_payload >> 2;
-                k--;
-            }
-        }
-    }
-}
-
 
 void scatter_device_ascending(uint threadidx){
     for (uint i = threadidx; i < BIN_PART_SIZE; i += BIN_THREADS){
@@ -389,7 +365,7 @@ void k_DigitBinning(uint block_id, uint logical_blocks){
         groupMemoryBarrier();
         barrier();
     }
-
+    
     if (partition_index < logical_blocks - 1){
         if (LANE_COUNT >= 16){
             load_keys_ge16(gl_LocalInvocationID.x, partition_index, keys);
@@ -440,9 +416,7 @@ void k_DigitBinning(uint block_id, uint logical_blocks){
     if (LANE_COUNT < 16){
 
     }
-
     scatter_keys_shared(offsets, keys);
-
     lookback(gl_LocalInvocationID.x, partition_index, exclusive_reduction, logical_blocks);
     groupMemoryBarrier();
     barrier();
@@ -453,8 +427,8 @@ void k_DigitBinning(uint block_id, uint logical_blocks){
     
     if (partition_index == logical_blocks - 1){
         scatter_device_partial(gl_LocalInvocationID.x, partition_index);
-    }
 
+    }
 }
 
 

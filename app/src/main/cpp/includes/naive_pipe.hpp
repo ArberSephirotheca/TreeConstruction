@@ -225,7 +225,7 @@ void Pipe::allocate() {
     std::fill_n(sort_tmp.u_pass_histogram_64, radix  * passes * max_binning_thread_blocks, 0);
 
     uint32_t aligned_size = ((params_.n + 4 - 1)/ 4) * 4;
-    const uint32_t num_blocks = (aligned_size + PARTITION_SIZE - 1) / PARTITION_SIZE;
+    const uint32_t num_blocks = (aligned_size + 3840 - 1) / 3840;
     // unique_tmp
     create_shared_empty_storage_buffer(params_.n * sizeof(uint32_t), &unique_tmp.contributions_buffer, &unique_tmp.contributions_memory, &mapped);
     unique_tmp.contributions = static_cast<uint32_t*>(mapped);
@@ -358,18 +358,18 @@ void Pipe::init(const int num_blocks, const int queue_idx){
 
 void Pipe::morton(const int num_blocks, const int queue_idx){
     std::cout << "start morton"<<std::endl;
-//    Morton morton_stage = Morton(assetManager_);
-//    morton_stage.run(num_blocks, queue_idx, u_points, u_morton_keys, u_points_buffer, u_morton_keys_buffer,  params_.n, params_.min_coord, params_.getRange());
-//
-    /*
-    for (int i = 0; i < 1024; i++){
-      printf("morton_keys[%d]: %d\n", i, u_morton_keys[i]);
-    }
-    */
+    Morton morton_stage = Morton(assetManager_);
+    morton_stage.run(num_blocks, queue_idx, u_points, u_morton_keys, u_points_buffer, u_morton_keys_buffer,  params_.n, params_.min_coord, params_.getRange());
 
-    for(int i = 0; i < params_.n; ++i){
-       u_morton_keys[i] = params_.n-i;
-    }
+
+//    for (int i = 0; i < 1024; i++){
+//      printf("morton_keys[%d]: %d\n", i, u_morton_keys[i]);
+//    }
+
+
+//    for(int i = 0; i < params_.n; ++i){
+//       u_morton_keys[i] = params_.n - i;
+//    }
 
 
 }

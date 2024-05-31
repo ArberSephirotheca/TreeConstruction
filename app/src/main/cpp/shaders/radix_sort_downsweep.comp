@@ -246,8 +246,7 @@ uint subgroup_hist_inclusive_scan_circle_shift_ge16(uint threadidx){
 
 void subgroup_hist_exclusive_scan_ge16(uint threadidx, uint reduction){
     if (threadidx < RADIX_BIN){
-        const uint lane_mask = LANE_COUNT - 1;
-        s_subgroupHistograms[((gl_SubgroupInvocationID + 1) & lane_mask) + (threadidx & ~lane_mask)] = reduction;
+        s_subgroupHistograms[((gl_SubgroupInvocationID + 1) & LANE_MASK) + (threadidx & ~LANE_MASK)] = reduction;
     }
     groupMemoryBarrier();
     barrier();
@@ -381,8 +380,8 @@ void k_DigitBinning(){
 
     if (partition_index == e_workgroups - 1){
         scatter_device_partial(gl_LocalInvocationID.x, partition_index);
-
     }
+
 
 }
 

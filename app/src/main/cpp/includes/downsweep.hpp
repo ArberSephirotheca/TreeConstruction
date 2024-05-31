@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
-#define PARTITION_SIZE 3072
+#define DOWN_SWEEP_PARTITION_SIZE 3072
 
 class DownSweepPrefixSum : public ApplicationBase{
     public:
@@ -74,7 +74,7 @@ const int n){
 
 	const uint32_t aligned_size = ((n + 4 - 1)/ 4) * 4;
 	const uint32_t vectorized_size = aligned_size / 4;
-	const uint32_t num_blocks = (aligned_size + PARTITION_SIZE - 1) / PARTITION_SIZE;
+	const uint32_t num_blocks = (aligned_size + DOWN_SWEEP_PARTITION_SIZE - 1) / DOWN_SWEEP_PARTITION_SIZE;
 
 	VkPipeline reduce_pipeline;
     VkPipeline scan_pipeline;
