@@ -161,8 +161,10 @@ const int n){
 	submit(queue_idx);
 
 
-
-	vkQueueWaitIdle(singleton.queues[queue_idx]);
+    auto result = vkQueueWaitIdle(singleton.queues[queue_idx]);
+    if (result != VK_SUCCESS){
+        __android_log_print(ANDROID_LOG_ERROR, "Vulkan", "Prefix Sum: Fail to wait for fence");
+    }
 	std::cout <<"end command buffer"<<std::endl;
 
 	cleanup(&pipeline);

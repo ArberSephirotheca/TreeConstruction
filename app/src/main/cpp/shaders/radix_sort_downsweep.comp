@@ -322,8 +322,8 @@ void scatter_device_partial(uint threadidx, uint partition_index){
     
 }
 
-void k_DigitBinning(){
-    uint partition_index = gl_WorkGroupID.x;
+void k_DigitBinning(uint block_id){
+    uint partition_index = block_id;
     uint keys[BIN_KEYS_PER_THREAD];
     uint offsets[BIN_KEYS_PER_THREAD];
 
@@ -387,5 +387,7 @@ void k_DigitBinning(){
 
 
 void main(){
-    k_DigitBinning();
+    for (uint zheyuan_block_id = gl_WorkGroupID.x; zheyuan_block_id < e_workgroups; zheyuan_block_id += gl_NumWorkGroups.x){
+        k_DigitBinning(zheyuan_block_id);
+    }
 }

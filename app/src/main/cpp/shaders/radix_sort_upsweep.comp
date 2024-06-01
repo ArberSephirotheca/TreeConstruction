@@ -112,5 +112,7 @@ void k_upsweep(uint block_id){
 
 }
 void main() {
-    k_upsweep(gl_WorkGroupID.x);
+        for (uint zheyuan_block_id = gl_WorkGroupID.x; zheyuan_block_id < e_workgroups; zheyuan_block_id += gl_NumWorkGroups.x){
+            k_upsweep(zheyuan_block_id);
+        }
 }

@@ -97,18 +97,20 @@ void exclusive_scan_partial(uint threadidx, uint workgroupidx, uint circular_shi
     }
     
 }
-void k_scan(){
+void k_scan(uint block_id){
     uint reduction = 0;
     const uint circular_shift = (gl_SubgroupInvocationID + 1) & LANE_MASK;
     const uint partition_end = e_workgroups / SCAN_BLOCK_SIZE * SCAN_BLOCK_SIZE;
-    const uint device_offset = gl_WorkGroupID.x * e_workgroups;
+    const uint device_offset = block_id * e_workgroups;
     
     // exculsive scan
-    exclusive_scan_full(gl_LocalInvocationID.x, gl_WorkGroupID.x, circular_shift, partition_end, device_offset, reduction);
-    exclusive_scan_partial(gl_LocalInvocationID.x, gl_WorkGroupID.x, circular_shift, partition_end, device_offset, reduction);
+    exclusive_scan_full(gl_LocalInvocationID.x, block_id, circular_shift, partition_end, device_offset, reduction);
+    exclusive_scan_partial(gl_LocalInvocationID.x, block_id, circular_shift, partition_end, device_offset, reduction);
 
 }
 
 void main(){
-    k_scan();
+    for (uint zheyuan_block_id = gl_WorkGroupID.x; zheyuan_block_id < e_workgroups; zheyuan_block_id += gl_NumWorkGroups.x){
+        k_scan(zheyuan_block_id);
+    }
 }

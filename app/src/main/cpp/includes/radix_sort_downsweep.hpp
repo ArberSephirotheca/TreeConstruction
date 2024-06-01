@@ -406,7 +406,7 @@ void RadixSortDownsweep::run(const int logical_blocks,
 
     auto result = vkQueueWaitIdle(singleton.queues[queue_idx]);
     if (result != VK_SUCCESS){
-        __android_log_print(ANDROID_LOG_ERROR, "Vulkan", "Fail to wait for fence");
+        __android_log_print(ANDROID_LOG_ERROR, "Vulkan", "Radix sort downsweep: Fail to wait for fence");
     }
     const auto end = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double, std::milli> elapsed = end - start;

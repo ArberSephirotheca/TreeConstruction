@@ -429,33 +429,33 @@ void Pipe::unique(const int num_blocks, const int queue_idx){
                      unique_tmp.index_buffer,
                      params_.n);
 
-    for (int i = 0; i < 200; ++i){
-        unique_tmp.contributions[i] = i;
-    }
-
-    for (int i = 0; i < 200; ++i)
-        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
-
-
-    for(int i = 3072; i < 3272; ++i)
-        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
-
-    for (int i = 3072*2; i < 3072*3; ++i)
-        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
-
-    for (int i = 3072*3; i < 3072*4; ++i)
-        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
-
-    for (int i = 3072*4; i < 3072*5; ++i)
-        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
-
-    for (int i = params_.n-3072; i < params_.n; ++i)
-        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
-
-
-    for(int i = params_.n-200; i < params_.n; i++)
-        printf("unique_morton_keys[%d]: %d\n", i, u_unique_morton_keys[i]);
-
+//    for (int i = 0; i < 200; ++i){
+//        unique_tmp.contributions[i] = i;
+//    }
+//
+//    for (int i = 0; i < 200; ++i)
+//        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
+//
+//
+//    for(int i = 3072; i < 3272; ++i)
+//        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
+//
+//    for (int i = 3072*2; i < 3072*3; ++i)
+//        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
+//
+//    for (int i = 3072*3; i < 3072*4; ++i)
+//        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
+//
+//    for (int i = 3072*4; i < 3072*5; ++i)
+//        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
+//
+//    for (int i = params_.n-3072; i < params_.n; ++i)
+//        printf("contributions[%d]: %d\n", i, unique_tmp.contributions[i]);
+//
+//
+//    for(int i = params_.n-200; i < params_.n; i++)
+//        printf("unique_morton_keys[%d]: %d\n", i, u_unique_morton_keys[i]);
+//
     n_unique_keys = unique_tmp.contributions[params_.n-1];
     printf("n_unique_keys: %d\n", n_unique_keys);
 

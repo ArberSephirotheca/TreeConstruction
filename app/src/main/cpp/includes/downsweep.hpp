@@ -10,7 +10,7 @@ class DownSweepPrefixSum : public ApplicationBase{
     DownSweepPrefixSum(AAssetManager* assetManager) : ApplicationBase(assetManager) {};
     ~DownSweepPrefixSum() {};
     void        submit(const int queue_idx);
-	void 		 cleanup(VkPipeline *prefix_sum_pipeline);
+	void 		 cleanup(VkPipeline *reduce_pipeline, VkPipeline *scan_pipeline, VkPipeline *downsweep_pipeline);
 	void run(const int logical_block,
 	const int queue_idx,
 	uint32_t *u_keys,
@@ -51,11 +51,13 @@ void DownSweepPrefixSum::submit(const int queue_idx){
 
 }
 
-void DownSweepPrefixSum::cleanup(VkPipeline *pipeline){
+void DownSweepPrefixSum::cleanup(VkPipeline *reduce_pipeline, VkPipeline *scan_pipeline, VkPipeline *downsweep_pipeline){
 
 		vkDestroyDescriptorSetLayout(singleton.device, descriptorSetLayouts[0], nullptr);
-		vkDestroyPipeline(singleton.device, *pipeline, nullptr);
-		vkDestroyShaderModule(singleton.device, reduce_shaderModule, nullptr);
+		vkDestroyPipeline(singleton.device, *reduce_pipeline, nullptr);
+        vkDestroyPipeline(singleton.device, *scan_pipeline, nullptr);
+        vkDestroyPipeline(singleton.device, *downsweep_pipeline, nullptr);
+        vkDestroyShaderModule(singleton.device, reduce_shaderModule, nullptr);
         vkDestroyShaderModule(singleton.device, scan_shaderModule, nullptr);
         vkDestroyShaderModule(singleton.device, downsweep_shaderModule, nullptr);
 		
@@ -184,11 +186,13 @@ const int n){
 
 
 
-	vkQueueWaitIdle(singleton.queues[queue_idx]);
+    auto result = vkQueueWaitIdle(singleton.queues[queue_idx]);
+    if (result != VK_SUCCESS){
+        __android_log_print(ANDROID_LOG_ERROR, "Vulkan", "Prefix Sum: Fail to wait for fence");
+    }
 	std::cout <<"end command buffer"<<std::endl;
 
-	cleanup(&reduce_pipeline);
-    cleanup(&scan_pipeline);
-    cleanup(&downsweep_pipeline);
+	cleanup(&reduce_pipeline, &scan_pipeline, &downsweep_pipeline);
+
 }
 
